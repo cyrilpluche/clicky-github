@@ -8,11 +8,14 @@ import org.apache.spark.sql.SparkSession
 object SparkAPI extends App {
 
     Logger.getLogger("org").setLevel(Level.ERROR)
-
+    
     val spark = SparkSession.builder().config("spark.master","local").getOrCreate()
-    val data = spark.read.option("header", "true").option("inferSchema", "true").format("json")
-          .load("public/data-students.json")
+    import spark.implicits._
+    val data = spark.read.json("public/data-students.json")
     data.printSchema()
+    data.select("label").show()
+    val data1=data.select("label").map(x=>(if(x(0)==true)1 else 0))
+    data1.show()
     spark.stop()
 
 
