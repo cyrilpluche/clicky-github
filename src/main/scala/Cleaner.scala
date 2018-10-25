@@ -10,38 +10,76 @@ object Cleaner {
     * @param df: A DataFrame
     * @return
     */
- def clean (df: DataFrame): DataFrame = {
+ def clean (df: DataFrame, spark: SparkSession): DataFrame = {
+  import spark.implicits._
+
    var newDF = cleanSize(df)
    newDF = cleanLabel(newDF)
    newDF = cleanOS(newDF)
    newDF = cleanInterest(newDF)
    newDF = cleanBidfloor(newDF)
+   newDF = cleanNetwork(newDF)
    cleanType(newDF)
   }
 
-  /*private def network (df: DataFrame): DataFrame = {
-
-  }*/
-
+  
   private def cleanSize (df: DataFrame): DataFrame = {
+
     df.withColumn("size",
-      when(col("size").isNotNull, s"${col("size")(0)} x ${col("size")(1)}")
+      when(col("size").isNotNull, 
+      concat(col("size")(0).cast("STRING"), lit("x"), col("size")(1).cast("STRING"))
+      )
     )
+    /* Function comming from the org.apache.spark.sql.functions
+    * withColumn: Create a new column with as name the first parameter 
+    * (or replace if a column with the same name exists)
+    * contact: contact several column into a new one 
+    * lit: create a new column with the value given in parameter of the function
+    */
   }
 
   private def cleanLabel (df: DataFrame): DataFrame = {
     df.withColumn("label", 
-      when(col("label") === "false", 0).otherwise(1)
+      when(
+        col("label") === "false", 
+        0).otherwise(1)
       // if the column value label is equal to false set value to 0 otherwise set the value to 1
     )
   }
 
-  private def cleanOS (df: DataFrame): DataFrame = { // TODO
-      df
+  private def cleanOS (df: DataFrame): DataFrame = { 
+      val list_os = List("amazon", "windows", "android", "ios")
+        // TODO maybe add some os to this list
+      def cleanOSint (dframe: DataFrame, list: List[String]): DataFrame = {
+        if (list.isEmpty) dframe
+        else {
+          val df = dframe.withColumn("os",
+              when(
+                  lower(col("os")).contains(list.head),
+                  list.head.capitalize // first letter in upperCase 
+                ).otherwise(col("os"))
+            )
+
+          cleanOSint(df, list.tail)
+        }
+      }
+
+      cleanOSint(df, list_os)
   }
 
+
   private def cleanBidfloor (df: DataFrame): DataFrame = { // TODO
-    df
+    // fill empty values with average of the bidfloor column
+    val averageDF = df.select(mean(df("bidfloor"))).collect()(0).getDouble(0)
+
+    val d = mean(df.col("bidfloor")).getItem(0)
+        df.withColumn("bidfloor", 
+      when(
+        col("bidfloor").isNull or col("bidfloor").isNaN, 
+        averageDF
+      ).otherwise(col("bidfloor"))
+    
+    )
   }
 
   private def cleanInterest (df: DataFrame): DataFrame = { // TODO
@@ -49,6 +87,10 @@ object Cleaner {
   }
 
   private def cleanType (df: DataFrame): DataFrame = { // TODO
+    df
+  }
+
+  private def cleanNetwork (df: DataFrame): DataFrame = {
     df
   }
 }
