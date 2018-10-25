@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
 object SparkAPI extends App {
 
     Logger.getLogger("org").setLevel(Level.ERROR)
-    
+
     val spark = SparkSession.builder().config("spark.master","local").getOrCreate()
     import spark.implicits._
     val data = spark.read.json("public/data-students.json")
@@ -18,5 +18,9 @@ object SparkAPI extends App {
     data1.show()
     spark.stop()
 
+
+    /*
+        Enzo: size, label, os, bidfloor
+     */
 
 }
