@@ -24,6 +24,7 @@ object SparkAPI extends App {
     d2.select("size").show()
     d2.select("os").show()
     d2.select("bidfloor").show()
+    d2.select("type").show()
   
     //val data1=data.select("label").map(x=> if (x(0)==(true)) 1 else 0)
 

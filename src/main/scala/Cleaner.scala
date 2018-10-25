@@ -87,7 +87,13 @@ object Cleaner {
   }
 
   private def cleanType (df: DataFrame): DataFrame = { // TODO
-    df
+    df.withColumn("type",
+      when(
+        col("type") === 1 or col("type") === 2 or col("type") === 3 or col("type") === 4,
+        col("type")
+      ).otherwise("no-value")
+    
+    )
   }
 
   private def cleanNetwork (df: DataFrame): DataFrame = {
