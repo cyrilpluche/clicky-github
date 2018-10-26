@@ -15,16 +15,20 @@ object SparkAPI extends App {
 
     import spark.implicits._
 
-    val data = spark.read.json("public/data-students.json")
+    //val data = spark.read.json("public/data-students.json")
+    val data = spark.read.format("json").load("public/data-students.json")
     data.printSchema()
-    
+    data.select("interests").show()
 
     val d2 = Cleaner.clean(data, spark)
-    d2.select("label").show()
-    d2.select("size").show()
-    d2.select("os").show()
-    d2.select("bidfloor").show()
-    d2.select("type").show()
+    println(s"\t\t\t${Console.YELLOW}${Console.BOLD}Cleanning data is finished ${Console.RESET}")
+    d2.printSchema()
+    //d2.select("network").show()
+    //d2.select("label").show()
+    //d2.select("size").show()
+    //d2.select("os").show()
+    //d2.select("bidfloor").show(5)
+    //d2.select("type").show()
   
     //val data1=data.select("label").map(x=> if (x(0)==(true)) 1 else 0)
 

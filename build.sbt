@@ -10,6 +10,9 @@ resolvers ++= Seq(
   "apache-snapshots" at "http://repository.apache.org/snapshots/"
 )
 
+libraryDependencies += "com.twitter" %% "util-eval" % "[6.2.4,)"
+libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0"
+
 // https://mvnrepository.com/artifact/org.apache.spark/spark-core
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % sparkVersion,
