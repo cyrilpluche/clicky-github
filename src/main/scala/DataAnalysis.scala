@@ -7,6 +7,7 @@ import org.apache.spark.ml.feature.{VectorAssembler, StringIndexer, VectorIndexe
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.Pipeline
 import scala.annotation.tailrec
+
 object DataAnalysis {
 
     /**
