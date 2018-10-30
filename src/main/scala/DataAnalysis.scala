@@ -10,6 +10,8 @@ import scala.annotation.tailrec
 
 object DataAnalysis {
 
+    //https://vishnuviswanath.com/spark_lr.html
+    
     /**
     * perfoms a logisiticRegression
     * @param training_data: traning data set
