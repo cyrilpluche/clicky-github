@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
 import org.apache.spark.ml.classification.{BinaryLogisticRegressionSummary, LogisticRegression, LogisticRegressionModel, _}
 import org.apache.spark.mllib.util.MLUtils
 /**
-  * Created by toddmcgrath on 6/15/16.
+  * Created by Clicky-Blinders.
   */
 object SparkAPI extends App {
 
@@ -23,7 +23,7 @@ object SparkAPI extends App {
     val training_data_cleaned = Training.cleanData(data, spark)
     println(s"\t\t\t${Console.YELLOW}${Console.BOLD}Cleanning data is finished ${Console.RESET}")
     training_data_cleaned.printSchema()
-    //training_data_cleaned.select("network").show()
+    training_data_cleaned.select("network").show(10)
     //training_data_cleaned.select("label").show()
     //training_data_cleaned.select("size").show()
     //training_data_cleaned.select("os").show()
