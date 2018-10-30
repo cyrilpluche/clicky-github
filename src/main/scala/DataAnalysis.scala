@@ -51,9 +51,13 @@ object DataAnalysis {
         val typeIndexer = new StringIndexer().setInputCol("type").setOutputCol("typeIndex")
         val userIndexer = new StringIndexer().setInputCol("user").setOutputCol("userIndex")
 
-        var columns = data.columns // every column of dataFrame
-                    .filterNot(_ == "label") // remove label column
+        /*var columns = data.columns // every column of dataFrame
+                    .filterNot(_ == "label") // remove label column */
         
+        val columns = Array(
+            "appOrSiteIndex", "bidfloor", "cityIndex", "exchangeIndex", "impidIndex", 
+            "interestsIndex", "label", "mediaIndexer", "networkIndex", "osIndex", 
+            "publisherIndex", "sizeIndex", "timestamp","typeIndex", "userIndex")
         val assembler = new VectorAssembler()
             .setInputCols(columns).setOutputCol("features")
 
@@ -65,13 +69,16 @@ object DataAnalysis {
             userIndexer, assembler, lr)
         )
 
-        val Array(training, test) = data.randomSplit(Array(0.8, 0.2), seed=12345)
+        val Array(training, test) = data.randomSplit(Array(0.7, 0.3), seed=12345)
+
+        println(s"\t\t${Console.RED}${Console.BOLD}Start training${Console.RESET}")
         val model = pipeline.fit(training)
+        println(s" ${model.explainParams()}")
         val result =  model.transform(test)
 
-
+        println("End")
         result.printSchema()
 
-        println(s" ${model.explainParams()}")
+        
     }
 }

@@ -97,7 +97,7 @@ object Training {
     df.withColumn("label", 
       when(
         col("label") === "true", 
-        1).otherwise(0)
+        1.0).otherwise(0.0)
       // if the column value label is equal to false set value to 0 otherwise set the value to 1
     )
   }
@@ -138,7 +138,7 @@ object Training {
     )
   }
 
-  private def cleanInterest (df: DataFrame, spark: SparkSession): DataFrame = { // TODO
+  private def cleanInterest (df: DataFrame, spark: SparkSession): DataFrame = {
     import spark.implicits._
     /**
     * @param oldValue: the value we need to replace 
@@ -228,8 +228,10 @@ object Training {
       when(
         col("type") === 1 or col("type") === 2 or col("type") === 3 or col("type") === 4,
         col("type")
-      ).otherwise(NO_VALUE)
-    
+      ).otherwise(NO_VALUE) /* .cast("Double")
+      cast the column into double type because the model definition only supports 
+      double type 
+      */
     )
   }
 
