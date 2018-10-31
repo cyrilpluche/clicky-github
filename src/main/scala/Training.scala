@@ -17,10 +17,11 @@ object Training {
    print(s"\n${Console.UNDERLINED}${Console.RED}Sart cleaning data :${Console.RESET}\n\n-\tInterest : ")
 
    var newDF = cleanInterest(df, spark)
-   print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tNetwork : ")
+   print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tNetwork : ") 
 
    newDF = cleanNetwork(newDF)
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tLabel : ")
+
    newDF = cleanLabel(newDF)
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tOS : ")
    newDF = cleanOS(newDF)
@@ -31,6 +32,7 @@ object Training {
    newDF = cleanSize(newDF)
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tType : ")
    newDF = cleanType(newDF)
+   newDF = newDF.cache()
    println(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
    newDF
   }
@@ -62,20 +64,23 @@ object Training {
     }
     println("End")
     return dframe */
-    def cleanNetworkInt (dataF: DataFrame, netRows: List[NetworkRow]): DataFrame = {
-      if (netRows.isEmpty) dataF
+    def cleanNetworkInt (netWorkCol: Column, netRows: List[NetworkRow]): Column = {
+      if (netRows.isEmpty) netWorkCol//dataF
       else {
-        val d = dataF.withColumn(
+        /*val d = dataF.withColumn(
             "network",
             when(
               col("network") === netRows.head.code,
               netRows.head.getBrandOrOperator
             ).otherwise(col("network"))
-        )
-        cleanNetworkInt(d, netRows.tail)
+        ) */
+
+        val col = regexp_replace(netWorkCol, netRows.head.code, netRows.head.getBrandOrOperator)
+        cleanNetworkInt(col, netRows.tail)
       }
     }
-    cleanNetworkInt(dframe, listFromCSV)
+    dframe.withColumn("network",
+      cleanNetworkInt(col("network"), listFromCSV))
   }
   
   private def cleanSize (df: DataFrame): DataFrame = {
@@ -138,6 +143,10 @@ object Training {
     )
   }
 
+
+  /**
+  * Triggers a "grows beyond 64 KB" error that doesn't stop the program
+   */
   private def cleanInterest (df: DataFrame, spark: SparkSession): DataFrame = {
     import spark.implicits._
     /**
@@ -161,24 +170,52 @@ object Training {
         replaceValue(oldValue, interestRowsList)
     }
 
-    def processRegexReplacement (dataF: DataFrame, interestRowsList: List[InterestRow]): DataFrame = {
-      if (interestRowsList.isEmpty) dataF 
+    def processRegexReplacement (interestColumn: Column, interestRowsList: List[InterestRow]): Column = {
+      if (interestRowsList.isEmpty) interestColumn //dataF 
       else {
-        val d = dataF.withColumn("interests",
+        /*val d = dataF.withColumn("interests",
           when(
             col("interests").isNotNull,
             regexp_replace(col("interests"), interestRowsList.head.code, interestRowsList.head.label)
           ).otherwise(NO_VALUE)
-        )
-       processRegexReplacement(d, interestRowsList.tail)
+        )*/
+        val col = regexp_replace(interestColumn, interestRowsList.head.code, interestRowsList.head.label)
+        processRegexReplacement(col, interestRowsList.tail)
       }
     }
 
 
     val listRowFromCSV: List[InterestRow] = InterestRow.interestRowsFromCSV("public/interest.csv")
+    val d = df.withColumn("interests",
+      when(
+        col("interests").isNull,
+        NO_VALUE
+      ).otherwise(col("interests"))
+    )
 
-    processRegexReplacement(df, listRowFromCSV)
 
+    val (part, part0) = listRowFromCSV.splitAt(listRowFromCSV.size / 2)
+      // split the list of interest into two sublist to avoid error "gros beyond 64KB"
+    
+    val (part1, part2) = part.splitAt(part.size / 2)
+    val (part3, part4) = part0.splitAt(part0.size / 2)
+
+    val (part5, part6) = part1.splitAt(part1.size / 2)
+    val (part7, part8) = part2.splitAt(part2.size / 2)
+    val (part9, part10) = part3.splitAt(part3.size / 2)
+    val (part11, part12) = part4.splitAt(part4.size / 2) 
+
+    var column = processRegexReplacement(col("interests"), part5)
+    column = processRegexReplacement(column, part6)
+    column = processRegexReplacement(column, part7)
+    column = processRegexReplacement(column, part8)
+    column = processRegexReplacement(column, part9)
+    column = processRegexReplacement(column, part10)
+    column = processRegexReplacement(column, part11)
+    column = processRegexReplacement(column, part12)
+    
+
+    d.withColumn("interests", column)
     /*val d = df.withColumn("interests",
       when(
         col("interests").isNull, NO_VALUE

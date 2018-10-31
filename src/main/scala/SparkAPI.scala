@@ -23,13 +23,13 @@ object SparkAPI extends App {
     val training_data_cleaned = Training.cleanData(data, spark)
     println(s"\t\t\t${Console.YELLOW}${Console.BOLD}Cleanning data is finished ${Console.RESET}")
     training_data_cleaned.printSchema()
-    //training_data_cleaned.select("network").show()
-    //training_data_cleaned.select("label").show()
-    //training_data_cleaned.select("size").show()
-    //training_data_cleaned.select("os").show()
-    //training_data_cleaned.select("bidfloor").show()
-    //training_data_cleaned.select("type").show()
-    //training_data_cleaned.select("interests").show(100, false)
+    // training_data_cleaned.select("network").show()
+    // training_data_cleaned.select("label").show()
+    // training_data_cleaned.select("size").show()
+    // training_data_cleaned.select("os").show()
+    // training_data_cleaned.select("bidfloor").show()
+    // training_data_cleaned.select("type").show()
+    // training_data_cleaned.select("interests").show(100, false)
   
     //val data1=data.select("label").map(x=> if (x(0)==(true)) 1 else 0)
 
@@ -43,6 +43,8 @@ object SparkAPI extends App {
     /*val splitted = training_data_cleaned.randomSplit(Array(0.8, 0.2))
     val lrModel = DataAnalysis.logisticRegression(splitted(0))
     println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")*/
+
+    //training_data_cleaned.write.format("json").save("public/datacleaned.json")
     DataAnalysis.logisticRegression(training_data_cleaned)
     spark.stop()
 
