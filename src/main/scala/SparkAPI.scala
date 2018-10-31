@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
 import org.apache.spark.ml.classification.{BinaryLogisticRegressionSummary, LogisticRegression, LogisticRegressionModel, _}
 import org.apache.spark.mllib.util.MLUtils
 /**
-  * Created by toddmcgrath on 6/15/16.
+  * Created by Clicky-Blinders.
   */
 object SparkAPI extends App {
 
@@ -23,6 +23,7 @@ object SparkAPI extends App {
     val training_data_cleaned = Training.cleanData(data, spark)
     println(s"\t\t\t${Console.YELLOW}${Console.BOLD}Cleanning data is finished ${Console.RESET}")
     training_data_cleaned.printSchema()
+<<<<<<< HEAD
     // training_data_cleaned.select("network").show()
     // training_data_cleaned.select("label").show()
     // training_data_cleaned.select("size").show()
@@ -30,6 +31,15 @@ object SparkAPI extends App {
     // training_data_cleaned.select("bidfloor").show()
     // training_data_cleaned.select("type").show()
     // training_data_cleaned.select("interests").show(100, false)
+=======
+    training_data_cleaned.select("network").show(10)
+    //training_data_cleaned.select("label").show()
+    //training_data_cleaned.select("size").show()
+    //training_data_cleaned.select("os").show()
+    //training_data_cleaned.select("bidfloor").show()
+    //training_data_cleaned.select("type").show()
+    //training_data_cleaned.select("interests").show(100, false)
+>>>>>>> e273ffa1c1629f177a2bd64da67ddb29c2b48e30
   
     //val data1=data.select("label").map(x=> if (x(0)==(true)) 1 else 0)
 
