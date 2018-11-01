@@ -19,11 +19,13 @@ object SparkAPI extends App {
     //val data = spark.read.json("public/data-students.json")
     val data = spark.read.format("json").load("public/data-students.json")
     data.printSchema()
-
+    data.select("impid", "timestamp").show(70)
     val training_data_cleaned = Training.cleanData(data, spark)
+    training_data_cleaned.cache()
+     print("\033[H\033[2J") // delete everything on the screen
     println(s"\t\t\t${Console.YELLOW}${Console.BOLD}Cleanning data is finished ${Console.RESET}")
     training_data_cleaned.printSchema()
-<<<<<<< HEAD
+    
     // training_data_cleaned.select("network").show()
     // training_data_cleaned.select("label").show()
     // training_data_cleaned.select("size").show()
@@ -31,15 +33,14 @@ object SparkAPI extends App {
     // training_data_cleaned.select("bidfloor").show()
     // training_data_cleaned.select("type").show()
     // training_data_cleaned.select("interests").show(100, false)
-=======
-    training_data_cleaned.select("network").show(10)
+
+    //training_data_cleaned.select("impid", "timestamp", "user", "publisher", "exchange").show(70)
     //training_data_cleaned.select("label").show()
     //training_data_cleaned.select("size").show()
     //training_data_cleaned.select("os").show()
     //training_data_cleaned.select("bidfloor").show()
     //training_data_cleaned.select("type").show()
     //training_data_cleaned.select("interests").show(100, false)
->>>>>>> e273ffa1c1629f177a2bd64da67ddb29c2b48e30
   
     //val data1=data.select("label").map(x=> if (x(0)==(true)) 1 else 0)
 

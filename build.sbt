@@ -12,6 +12,7 @@ resolvers ++= Seq(
 
 libraryDependencies += "com.twitter" %% "util-eval" % "[6.2.4,)"
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0"
+libraryDependencies += "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly()
 
 // https://mvnrepository.com/artifact/org.apache.spark/spark-core
 libraryDependencies ++= Seq(

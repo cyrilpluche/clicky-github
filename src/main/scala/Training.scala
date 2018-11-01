@@ -13,7 +13,8 @@ object Training {
     */
  def cleanData (df: DataFrame, spark: SparkSession): DataFrame = {
    import spark.implicits._
-
+ 
+    // TODO remove null value from every columns 
    print(s"\n${Console.UNDERLINED}${Console.RED}Sart cleaning data :${Console.RESET}\n\n-\tInterest : ")
 
    var newDF = cleanInterest(df, spark)
@@ -24,17 +25,27 @@ object Training {
 
    newDF = cleanLabel(newDF)
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tOS : ")
+
    newDF = cleanOS(newDF)
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tBidFloor : ")
   
    newDF = cleanBidfloor(newDF)
+   print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tImpid : ")
+
+   newDF = cleanImpid(newDF)
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tSize : ")
+
    newDF = cleanSize(newDF)
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tType : ")
+
    newDF = cleanType(newDF)
-   newDF = newDF.cache()
+   print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tCity")
+
+   newDF = cleanCity(newDF)
    println(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
+
    newDF
+   //cleanNullValue(newDF)
   }
 
 
@@ -88,7 +99,7 @@ object Training {
     df.withColumn("size",
       when(col("size").isNotNull, 
       concat(col("size")(0).cast("STRING"), lit("x"), col("size")(1).cast("STRING"))
-      )
+      ).otherwise(NO_VALUE)
     )
     /* Function comming from the org.apache.spark.sql.functions
     * withColumn: Create a new column with as name the first parameter 
@@ -110,21 +121,24 @@ object Training {
   private def cleanOS (df: DataFrame): DataFrame = { 
       val list_os = List("amazon", "windows", "android", "ios")
         // TODO maybe add some os to this list
+      val dframe = df.withColumn("os",
+        when(col("os").isNull, NO_VALUE).otherwise(col("os"))
+      )
       def cleanOSint (dframe: DataFrame, list: List[String]): DataFrame = {
         if (list.isEmpty) dframe
         else {
-          val df = dframe.withColumn("os",
+          val d = dframe.withColumn("os",
               when(
                   lower(col("os")).contains(list.head),
                   list.head.capitalize // first letter in upperCase 
                 ).otherwise(col("os"))
             )
 
-          cleanOSint(df, list.tail)
+          cleanOSint(d, list.tail)
         }
       }
 
-      cleanOSint(df, list_os)
+      cleanOSint(dframe, list_os)
   }
 
 
@@ -265,12 +279,28 @@ object Training {
       when(
         col("type") === 1 or col("type") === 2 or col("type") === 3 or col("type") === 4,
         col("type")
-      ).otherwise(NO_VALUE) /* .cast("Double")
+      ).otherwise(-1).cast("Double") /* .cast("Double")
       cast the column into double type because the model definition only supports 
       double type 
       */
     )
   }
 
+
+  private def cleanImpid (df: DataFrame): DataFrame = {
+    df.withColumn("impid",
+      when(col("impid").isNull, NO_VALUE).otherwise(col("impid"))
+    )
+  }
+
+  private def cleanCity (df: DataFrame): DataFrame = {
+    df.withColumn("city",
+      when(col("city").isNull, NO_VALUE).otherwise(col("city"))
+    )
+  }
+
+  private def cleanNullValue (df: DataFrame): DataFrame = {
+      df.na.fill(NO_VALUE)
+  }
  
 }

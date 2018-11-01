@@ -71,13 +71,16 @@ object DataAnalysis {
 
         val Array(training, test) = data.randomSplit(Array(0.7, 0.3), seed=12345)
 
-        println(s"\t\t${Console.RED}${Console.BOLD}Start training${Console.RESET}")
+        println(s"\t\t\t${Console.RED}${Console.BOLD}Start data analysis${Console.RESET}")
+        print(s"-\ttraining: ")
         val model = pipeline.fit(training)
+        print(s"${Console.BLUE}${Console.BOLD}Finished ${Console.RESET}")
         println(s" ${model.explainParams()}")
         val result =  model.transform(test)
 
         println("End")
         result.printSchema()
+        result.select("prediction", "label").show(100, false)
 
         
     }
