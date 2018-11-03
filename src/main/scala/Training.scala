@@ -39,13 +39,12 @@ object Training {
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tType : ")
 
    newDF = cleanType(newDF)
-   print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tCity")
+   print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tCity : ")
 
    newDF = cleanCity(newDF)
    println(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
 
-   newDF
-   //cleanNullValue(newDF)
+    cleanNullValue(newDF)
   }
 
 
@@ -144,17 +143,19 @@ object Training {
 
   private def cleanBidfloor (df: DataFrame): DataFrame = { 
     // fill empty values with average of the bidfloor column
-    val averageDF = df.select(mean(df("bidfloor"))).collect()(0).getDouble(0)
+    val averageDF = df.select(mean(df("bidfloor"))).first()(0).asInstanceOf[Double]
       // get the average value 
 
-    val d = mean(df.col("bidfloor")).getItem(0)
+    /*val d = mean(df.col("bidfloor")).getItem(0)
         df.withColumn("bidfloor", 
       when(
         col("bidfloor").isNull or col("bidfloor").isNaN, 
         averageDF
-      ).otherwise(col("bidfloor"))
-    
-    )
+      ).otherwise(col("bidfloor")) 
+
+    ) */
+      df.na.fill(averageDF, Seq("bidfloor"))
+
   }
 
 
@@ -219,7 +220,7 @@ object Training {
     val (part9, part10) = part3.splitAt(part3.size / 2)
     val (part11, part12) = part4.splitAt(part4.size / 2) 
 
-    var column = processRegexReplacement(col("interests"), part5)
+    var column = processRegexReplacement(d.col("interests"), part5)
     column = processRegexReplacement(column, part6)
     column = processRegexReplacement(column, part7)
     column = processRegexReplacement(column, part8)
