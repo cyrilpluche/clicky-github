@@ -1,4 +1,4 @@
-
+package preparation
 import scala.io.Source
 case class NetworkRow(val code: String, val brand: String, val operator: String) {
     def getBrandOrOperator: String = {

@@ -1,3 +1,4 @@
+package analysis
 import org.apache.spark.ml.classification.{BinaryLogisticRegressionSummary, LogisticRegression, LogisticRegressionModel}
 import org.apache.spark._
 import org.apache.log4j._
@@ -20,15 +21,17 @@ object DataAnalysis {
     def logisticRegression (training_data: DataFrame, spark: SparkSession): Any /*LogisticRegressionModel*/ = { // TODO
 
         val Array(training, test) = training_data.randomSplit(Array(0.8, 0.2), seed=12345)
-        val model = train(training.cache())
+        training.cache()
+        val model = train(training)
 
 
-        val df_test = test.cache()
-        val result =  model.transform(df_test)
+        test.cache()
+        val result =  model.transform(test)
 
         //println("End")
         result.printSchema()
-        println(s" ${model.explainParams()}")
+        result.cache()
+        //println(s" ${model.explainParams()}")
         val nbErreur = result.filter(result.col("label") !== result.col("prediction")).count()
         println("Pourcentage erreur " + nbErreur/ result.count() + " Soit un nombre d'eerreur de " + nbErreur)
         result.filter(result.col("label") !== result.col("prediction")).select("prediction", "label").show(50, false)
@@ -42,10 +45,10 @@ object DataAnalysis {
     private def testModel (label_colname: String, prediction_colname: String, testDF: DataFrame, spark: SparkSession): 
     BinaryClassificationMetrics = {
         import spark.implicits._
-        val predictionAndLabelRDD = testDF.select(label_colname, prediction_colname)
+        val predictionAndLabelRDD = testDF.select(prediction_colname, label_colname)
             .map(row => (row.getDouble(0), row.getDouble(1))).rdd
 
-        new BinaryClassificationMetrics(predictionAndLabelRDD)
+        new BinaryClassificationMetrics(predictionAndLabelRDD, 10)
     }
 
     /**
@@ -54,30 +57,31 @@ object DataAnalysis {
     * @return PipelineModel
     */
     private def train (training_dataset: DataFrame): PipelineModel = { 
+
         val appOrSiteIndexer = new StringIndexer().setInputCol("appOrSite")
-            .setOutputCol("appOrSiteIndex").setHandleInvalid("skip")
+            .setOutputCol("appOrSiteIndex")//.setHandleInvalid("keep")
         val cityIndexer = new StringIndexer().setInputCol("city")
-            .setOutputCol("cityIndex").setHandleInvalid("skip")
+            .setOutputCol("cityIndex").setHandleInvalid("keep")
         val exchangeIndexer = new StringIndexer().setInputCol("exchange")
-            .setOutputCol("exchangeIndex").setHandleInvalid("skip")
+            .setOutputCol("exchangeIndex").setHandleInvalid("keep")
         val impidIndexer = new StringIndexer().setInputCol("impid")
-            .setOutputCol("impidIndex").setHandleInvalid("skip")
+            .setOutputCol("impidIndex").setHandleInvalid("keep")
         val interestsIndexer = new StringIndexer().setInputCol("interests")
-            .setOutputCol("interestsIndex").setHandleInvalid("skip")
+            .setOutputCol("interestsIndex").setHandleInvalid("keep")
         val mediaIndexer = new StringIndexer().setInputCol("media")
-            .setOutputCol("mediaIndexer").setHandleInvalid("skip")
+            .setOutputCol("mediaIndexer").setHandleInvalid("keep")
         val networkIndexer = new StringIndexer().setInputCol("network")
-            .setOutputCol("networkIndex").setHandleInvalid("skip")
+            .setOutputCol("networkIndex").setHandleInvalid("keep")
         val osIndexer = new StringIndexer().setInputCol("os")
-            .setOutputCol("osIndex").setHandleInvalid("skip")
+            .setOutputCol("osIndex").setHandleInvalid("keep")
         val publisherIndexer = new StringIndexer().setInputCol("publisher")
-            .setOutputCol("publisherIndex").setHandleInvalid("skip")
+            .setOutputCol("publisherIndex").setHandleInvalid("keep")
         val sizeIndexer = new StringIndexer().setInputCol("size")
-            .setOutputCol("sizeIndex").setHandleInvalid("skip")
+            .setOutputCol("sizeIndex").setHandleInvalid("keep")
         //val typeIndexer = new StringIndexer().setInputCol("type")
-            //.setOutputCol("typeIndex").setHandleInvalid("skip")
+            //.setOutputCol("typeIndex").setHandleInvalid("keep")
         val userIndexer = new StringIndexer().setInputCol("user")
-            .setOutputCol("userIndex").setHandleInvalid("skip")
+            .setOutputCol("userIndex").setHandleInvalid("keep")
 
         /*var columns = data.columns // every column of dataFrame
                     .filterNot(_ == "label") // remove label column */
@@ -93,7 +97,7 @@ object DataAnalysis {
 
         val lr = new LogisticRegression().setFitIntercept(true)
             .setStandardization(true).setRegParam(0.3).setTol(0.1)
-            .setMaxIter(10).setLabelCol("label").setFeaturesCol("features")
+            .setMaxIter(15).setLabelCol("label").setFeaturesCol("features")
 
         val pipeline = new Pipeline().setStages(
             Array(appOrSiteIndexer, cityIndexer, exchangeIndexer, impidIndexer, interestsIndexer, 
@@ -114,5 +118,22 @@ object DataAnalysis {
         //println(s" ${model.explainParams()}")
         
         
+    }
+
+
+    def getArrayColumnIndexer(df: DataFrame): Array[ColumnIndexer] = {
+        val columnNames = df.dtypes
+
+        def colnamesToListColumnIndexer (list: List[ColumnIndexer], 
+        colnames: Array[(String, String)], index: Int): List[ColumnIndexer] = {
+            if (colnames.length == index) list
+            else {
+                val l = ColumnIndexer(colnames(index)._1, (colnames(index)._1).equals("StringType")) :: list
+                colnamesToListColumnIndexer(l, colnames, index + 1)
+            }
+        }
+
+        val listColunIndexer = colnamesToListColumnIndexer(Nil, columnNames, 0)
+        listColunIndexer.toArray
     }
 }

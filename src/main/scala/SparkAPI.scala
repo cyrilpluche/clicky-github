@@ -1,3 +1,5 @@
+import analysis._
+import preparation._
 import org.apache.spark._
 import org.apache.log4j._
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
@@ -13,7 +15,7 @@ object SparkAPI extends App {
     Logger.getLogger("org").setLevel(Level.ERROR)
 
     val spark = SparkSession.builder().config("spark.master","local").getOrCreate()
-    //spark.conf.set("spark.sql.codegen.wholeStage", false)
+    spark.conf.set("spark.sql.codegen.wholeStage", false)
 
     import spark.implicits._
 

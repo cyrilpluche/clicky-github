@@ -1,3 +1,4 @@
+package preparation
 import org.apache.spark._
 import org.apache.log4j._
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
@@ -42,6 +43,10 @@ object Training {
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tCity : ")
 
    newDF = cleanCity(newDF)
+   print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tTimeStamp : ")
+
+   newDF = cleanTimeStamp(newDF)
+
    println(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
 
     cleanNullValue(newDF)
@@ -278,13 +283,14 @@ object Training {
   private def cleanType (df: DataFrame): DataFrame = {
     df.withColumn("type",
       when(
-        col("type") === 1 or col("type") === 2 or col("type") === 3 or col("type") === 4,
-        col("type")
+        col("type").isNotNull and
+        (col("type") === 1 or col("type") === 2 or col("type") === 3 or col("type") === 4),
+        col("type").cast("Double")
       ).otherwise(-1).cast("Double") /* .cast("Double")
       cast the column into double type because the model definition only supports 
       double type 
       */
-    )
+    ).na.fill(-1, Seq("type"))
   }
 
 
@@ -298,6 +304,15 @@ object Training {
     df.withColumn("city",
       when(col("city").isNull, NO_VALUE).otherwise(col("city"))
     )
+  }
+
+  private def cleanTimeStamp (df: DataFrame): DataFrame = {
+    val avg = df.select(
+      bround(mean(df("timestamp")))
+      ).first()(0).asInstanceOf[Double]
+
+    df.withColumn("timestamp", col("timestamp").cast("Double"))
+    .na.fill(avg, Seq("timestamp"))
   }
 
   private def cleanNullValue (df: DataFrame): DataFrame = {

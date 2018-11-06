@@ -1,4 +1,4 @@
-
+package preparation
 import scala.io.Source
 case class InterestRow (val code: String, val label: String)
 
