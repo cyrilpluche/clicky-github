@@ -318,5 +318,16 @@ object Training {
   private def cleanNullValue (df: DataFrame): DataFrame = {
       df.na.fill(NO_VALUE)
   }
+
+  private def dropNonRelevantColumns (df: DataFrame): DataFrame = {
+
+    def dropNonRelevantFromArray (df: DataFrame, colNames: Array[String], index: Int)
+      : DataFrame = {
+        if (colNames.length == index) df
+        else {
+
+        }
+      }
+  }
  
 }

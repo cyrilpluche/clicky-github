@@ -20,8 +20,10 @@ class DataAnalysisTest extends FunSuite {
             (-27, "horse")
         ).toDF("number", "word")
 
-        
+        val arr = DataAnalysis.getArrayColumnIndexer(someDF)
 
-        assert()
+        assert(arr.isInstanceOf[Array[ColumnIndexer]])
+        assert(arr(1).createIndex.isEmpty)
+        assert(!arr(0).createIndex.isEmpty)
     }
 }

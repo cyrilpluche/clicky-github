@@ -12,6 +12,7 @@ case class ColumnIndexer(val columnName: String, isStringIndexer: Boolean = true
     def createIndex: Option[StringIndexer] = {
         if (isStringIndexer) Some(
                 new StringIndexer().setInputCol(columnName).setOutputCol(getOutPutName)
+                    .setHandleInvalid("keep")
         )
         else None
     }

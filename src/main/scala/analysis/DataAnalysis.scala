@@ -9,6 +9,7 @@ import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.ml._
 import scala.annotation.tailrec
+import org.apache.spark.ml.util._
 
 object DataAnalysis {
 
@@ -20,13 +21,14 @@ object DataAnalysis {
     */
     def logisticRegression (training_data: DataFrame, spark: SparkSession): Any /*LogisticRegressionModel*/ = { // TODO
 
-        val Array(training, test) = training_data.randomSplit(Array(0.8, 0.2), seed=12345)
-        training.cache()
-        val model = train(training)
-
-
-        test.cache()
-        val result =  model.transform(test)
+        val Array(training, test) = training_data.randomSplit(Array(0.7, 0.3), seed=1L)
+        val df_train = training.cache()
+        // val model = train(training)
+         println(s"\t\t\t${Console.RED}${Console.BOLD}Start data analysis${Console.RESET}")
+        val model = createPipeLineModel(df_train)
+        println(s"\n\n\t\t${Console.BLUE}${Console.BOLD}Maching learning finished ${Console.RESET}")
+        val df_test = test.cache()
+        val result =  model.transform(df_test)
 
         //println("End")
         result.printSchema()
@@ -42,8 +44,8 @@ object DataAnalysis {
        println(metrics.areaUnderROC())
     }
 
-    private def testModel (label_colname: String, prediction_colname: String, testDF: DataFrame, spark: SparkSession): 
-    BinaryClassificationMetrics = {
+    private def testModel (label_colname: String, prediction_colname: String, 
+        testDF: DataFrame, spark: SparkSession): BinaryClassificationMetrics = {
         import spark.implicits._
         val predictionAndLabelRDD = testDF.select(prediction_colname, label_colname)
             .map(row => (row.getDouble(0), row.getDouble(1))).rdd
@@ -124,16 +126,79 @@ object DataAnalysis {
     def getArrayColumnIndexer(df: DataFrame): Array[ColumnIndexer] = {
         val columnNames = df.dtypes
 
-        def colnamesToListColumnIndexer (list: List[ColumnIndexer], 
-        colnames: Array[(String, String)], index: Int): List[ColumnIndexer] = {
-            if (colnames.length == index) list
+        /**
+        * @param colnames: Array of tuples (colname, coltype)
+        * @param index: The index of the current case of the array
+        */
+        def colnamesToListColumnIndexer (colnames: Array[(String, String)], index: Int): List[ColumnIndexer] = {
+            if (colnames.length == index) Nil
             else {
-                val l = ColumnIndexer(colnames(index)._1, (colnames(index)._1).equals("StringType")) :: list
-                colnamesToListColumnIndexer(l, colnames, index + 1)
+                // Check if the type of the column is String otherwise no need of StringIndexer
+                ColumnIndexer(colnames(index)._1, (colnames(index)._2).equals("StringType")) :: 
+                    colnamesToListColumnIndexer(colnames, index + 1)
             }
         }
 
-        val listColunIndexer = colnamesToListColumnIndexer(Nil, columnNames, 0)
+        val listColunIndexer = colnamesToListColumnIndexer(columnNames, 0)
         listColunIndexer.toArray
     }
+
+    def createVecteurAssembler (colIndexers: Array[ColumnIndexer]): VectorAssembler = {
+
+        def colIndexersToListNames (arrayIndexers: Array[ColumnIndexer], index: Int):
+         List[String] = {
+             if (index == arrayIndexers.length) Nil
+             else 
+                 arrayIndexers(index).getOutPutName :: colIndexersToListNames(arrayIndexers, index + 1)
+        }
+
+        val colums = colIndexersToListNames(colIndexers, 0).toArray
+        new VectorAssembler().setInputCols(colums).setOutputCol("features")
+    }
+
+    /**
+    * @param colIndexers: Array of ColumnIndexer
+    * @param lrModel: Logisitic Regression
+    * @param vectorAssembler: vector assembler
+    * @return Array[PipelineStage]
+    */
+    def createPipeLineStages (colIndexers: Array[ColumnIndexer], lrModel: LogisticRegression,
+         assembler: VectorAssembler): 
+        Array[PipelineStage] = {
+
+        def colIndexerToListStringIndexers (array: Array[ColumnIndexer], index: Int): List[PipelineStage]= {
+            if (array.length == index) Nil
+            else {
+                if (array(index).createIndex.isEmpty) colIndexerToListStringIndexers(array, index + 1)
+                else array(index).createIndex.get :: colIndexerToListStringIndexers(array, index + 1)
+            }
+        }
+
+        val l = lrModel :: assembler :: colIndexerToListStringIndexers(colIndexers, 0)
+        l.reverse.toArray // reverse the list because assembler cannot before the StringIndexer
+    }
+
+    /**
+    * @param training_dataset: DataFrame the model will train on
+    * Starting from a dataframe train and create a PipeLineModel 
+    * the DataFrame is supposed to be provided for training so it was spplitted before
+    */
+    def createPipeLineModel (training_dataset: DataFrame): PipelineModel = {
+        val arrayColumnIndexer = getArrayColumnIndexer(training_dataset)
+        val assembler = createVecteurAssembler(arrayColumnIndexer)
+
+        val lr = new LogisticRegression()//.setFitIntercept(true)
+            //.setStandardization(true).setRegParam(0.01)
+            //.setElasticNetParam(0.8).setTol(0.1)
+            .setRegParam(0.1)
+            .setMaxIter(15).setLabelCol("label").setFeaturesCol("features")
+
+        val pipelineStages = createPipeLineStages(arrayColumnIndexer, lr, assembler)
+
+         new Pipeline().setStages(pipelineStages).fit(training_dataset)
+
+        
+    }
+
+
 }
