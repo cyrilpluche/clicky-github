@@ -38,11 +38,10 @@ object SparkAPI extends App {
      data.filter(data.col("user").isNull).select("user").show(1)*/
 
     data.select("impid", "timestamp").show(70)
-    var training_data_cleaned = Training.cleanData(data, spark)
+    var training_data_cleaned = DataCleaner.clean(data, spark)
     training_data_cleaned = training_data_cleaned.cache()
      print("\033[H\033[2J") // delete everything on the screen
     println(s"\t\t\t${Console.YELLOW}${Console.BOLD}Cleanning data is finished ${Console.RESET}")
-    training_data_cleaned = training_data_cleaned.cache()
     training_data_cleaned.printSchema()
 
     /*training_data_cleaned.filter(training_data_cleaned.col("appOrSite").isNull).select("appOrSite").show(1)

@@ -5,14 +5,14 @@ import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, _}
 import scala.annotation.tailrec
 
-object Training {
+object DataCleaner {
   val NO_VALUE = "no-value"
   /**
     * clen every columon of the dataframe and return a new data frame
     * @param df: A DataFrame
     * @return
     */
- def cleanData (df: DataFrame, spark: SparkSession): DataFrame = {
+ def clean (df: DataFrame, spark: SparkSession): DataFrame = {
    import spark.implicits._
  
     // TODO remove null value from every columns 
@@ -319,15 +319,7 @@ object Training {
       df.na.fill(NO_VALUE)
   }
 
-  private def dropNonRelevantColumns (df: DataFrame): DataFrame = {
 
-    def dropNonRelevantFromArray (df: DataFrame, colNames: Array[String], index: Int)
-      : DataFrame = {
-        if (colNames.length == index) df
-        else {
-
-        }
-      }
-  }
+  
  
 }

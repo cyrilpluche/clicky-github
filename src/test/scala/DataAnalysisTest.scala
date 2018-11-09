@@ -6,7 +6,7 @@ import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import analysis._
 
 class DataAnalysisTest extends FunSuite {
-    test("getArrayColumnIndexer") {
+    test("getArrayColumnIndexer is set correctly") {
         
          Logger.getLogger("org").setLevel(Level.ERROR)
 
@@ -23,7 +23,7 @@ class DataAnalysisTest extends FunSuite {
         val arr = DataAnalysis.getArrayColumnIndexer(someDF)
 
         assert(arr.isInstanceOf[Array[ColumnIndexer]])
-        assert(arr(1).createIndex.isEmpty)
-        assert(!arr(0).createIndex.isEmpty)
+        assert(arr(0).createIndex.isEmpty)
+        assert(!arr(1).createIndex.isEmpty)
     }
 }

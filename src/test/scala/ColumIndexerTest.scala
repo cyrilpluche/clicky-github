@@ -42,7 +42,7 @@ class ColumnIndexerTest extends FunSuite {
     }
 
 
-    test ("ColumnIndexer getOutPutName") {
+    test ("ColumnIndexer getOutPutName is set correctly") {
          Logger.getLogger("org").setLevel(Level.ERROR)
 
         val spark = SparkSession.builder().config("spark.master","local").getOrCreate()
@@ -64,7 +64,7 @@ class ColumnIndexerTest extends FunSuite {
         assert(cIndex2.getOutPutName.equals("wordindex"))
     }
 
-    test("ColumnIndexer createIndex") {
+    test("ColumnIndexer createIndex is set correctly") {
         Logger.getLogger("org").setLevel(Level.ERROR)
 
         val spark = SparkSession.builder().config("spark.master","local").getOrCreate()
