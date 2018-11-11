@@ -26,7 +26,7 @@ object DataAnalysis {
         // val model = train(training)
          println(s"\t\t\t${Console.RED}${Console.BOLD}Start data analysis${Console.RESET}")
         val model = createPipeLineModel(df_train)
-        println(s"\n\n\t\t${Console.BLUE}${Console.BOLD}Maching learning finished ${Console.RESET}")
+        println(s"\n\n\t\t${Console.BLUE}${Console.BOLD}Machine learning finished ${Console.RESET}")
         val df_test = test.cache()
         val result =  model.transform(df_test)
 
@@ -34,14 +34,32 @@ object DataAnalysis {
         result.printSchema()
         result.cache()
         //println(s" ${model.explainParams()}")
-        val nbErreur = result.filter(result.col("label") !== result.col("prediction")).count()
+        /*val nbErreur = result.filter(result.col("label") !== result.col("prediction")).count()
         println("Pourcentage erreur " + nbErreur/ result.count() + " Soit un nombre d'eerreur de " + nbErreur)
-        result.filter(result.col("label") !== result.col("prediction")).select("prediction", "label").show(50, false)
+        result.filter(result.col("label") !== result.col("prediction")).select("prediction", "label").show(50, false) */
        
        val metrics = testModel("label", "prediction", result, spark)
+
+
+        println(s"\t\t\t${Console.BOLD}${Console.GREEN}Precision ${Console.RESET}")
+        metrics.precisionByThreshold.foreach { case (t, p) =>
+            println(s"Threshold: $t, Precision: $p")
+        }
+
+        println(s"\n\n\t\t\t${Console.BOLD}${Console.GREEN}Recall ${Console.RESET}")
+        metrics.recallByThreshold.foreach { case (t, r) =>
+            println(s"Threshold: $t, Recall: $r")
+        }
+
+
+        println(s"\n\n\t\t\t${Console.BOLD}${Console.GREEN}F-measure${Console.RESET}")
+        metrics.fMeasureByThreshold.foreach { case (t, f) =>
+            println(s"Threshold: $t, F-score: $f, Beta = 1")
+        }
     
-        print("ROC = ")
-       println(metrics.areaUnderROC())
+        println(s"\n\n\t\t\t${Console.BOLD}${Console.GREEN}ROC${Console.RESET}")
+        print("area under ROC = ")
+        println(metrics.areaUnderROC())
     }
 
     private def testModel (label_colname: String, prediction_colname: String, 
@@ -113,7 +131,7 @@ object DataAnalysis {
         print(s"-\ttraining: ")
         
         val model = pipeline.fit(training_dataset)
-        print(s"\t\t${Console.BLUE}${Console.BOLD}Maching learning finished ${Console.RESET}")
+        print(s"\t\t${Console.BLUE}${Console.BOLD}Machine learning finished ${Console.RESET}")
 
         model
         

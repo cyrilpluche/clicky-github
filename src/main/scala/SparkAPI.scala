@@ -89,12 +89,8 @@ object SparkAPI extends App {
     println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")*/
 
     //training_data_cleaned.write.format("json").save("public/datacleaned.json")
-    DataAnalysis.logisticRegression(training_data_cleaned, spark)
+    DataAnalysis.logisticRegression(training_data_cleaned.select("size", "label", "os"), spark)
     spark.stop()
 
-
-    /*
-        Enzo: size, label, os, bidfloor
-     */
 
 }
