@@ -1,4 +1,5 @@
 package analysis
+import preparation._
 import org.apache.spark.ml.classification.{BinaryLogisticRegressionSummary, LogisticRegression, LogisticRegressionModel}
 import org.apache.spark._
 import org.apache.log4j._
@@ -17,11 +18,12 @@ object DataAnalysis {
     
     /**
     * perfoms a logisiticRegression
-    * @param training_data: traning data set
+    * @param data: traning data set
     */
-    def logisticRegression (training_data: DataFrame, spark: SparkSession): Any /*LogisticRegressionModel*/ = { // TODO
+    def logisticRegression (data: DataFrame, spark: SparkSession): Any /*LogisticRegressionModel*/ = { // TODO
 
-        val Array(training, test) = training_data.randomSplit(Array(0.7, 0.3), seed=1L)
+        val Array(training, test) = DataFrameFunctions.randomSplit(data)
+        //data.randomSplit(Array(0.7, 0.3), seed=1L)
         val df_train = training.cache()
         // val model = train(training)
          println(s"\t\t\t${Console.RED}${Console.BOLD}Start data analysis${Console.RESET}")
@@ -76,7 +78,7 @@ object DataAnalysis {
     * @param training_dataset: the dataFrame that will be prepared 
     * @return PipelineModel
     */
-    private def train (training_dataset: DataFrame): PipelineModel = { 
+    private def train (training_dataset: DataFrame): PipelineModel = { // not used anymore
 
         val appOrSiteIndexer = new StringIndexer().setInputCol("appOrSite")
             .setOutputCol("appOrSiteIndex")//.setHandleInvalid("keep")
@@ -171,7 +173,7 @@ object DataAnalysis {
         }
 
         val colums = colIndexersToListNames(colIndexers, 0).toArray
-        new VectorAssembler().setInputCols(colums).setOutputCol("features")
+        new VectorAssembler().setInputCols(colums).setOutputCol("features_temp")
     }
 
     /**
@@ -191,8 +193,8 @@ object DataAnalysis {
                 else array(index).createIndex.get :: colIndexerToListStringIndexers(array, index + 1)
             }
         }
-
-        val l = lrModel :: assembler :: colIndexerToListStringIndexers(colIndexers, 0)
+        val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
+        val l = lrModel:: normalizer ::assembler :: colIndexerToListStringIndexers(colIndexers, 0)
         l.reverse.toArray // reverse the list because assembler cannot before the StringIndexer
     }
 
@@ -208,8 +210,8 @@ object DataAnalysis {
         val lr = new LogisticRegression()//.setFitIntercept(true)
             //.setStandardization(true).setRegParam(0.01)
             //.setElasticNetParam(0.8).setTol(0.1)
-            .setRegParam(0.1)
-            .setMaxIter(15).setLabelCol("label").setFeaturesCol("features")
+            .setRegParam(0.01).setTol(0.1)
+            .setMaxIter(25).setLabelCol("label").setFeaturesCol("features")
 
         val pipelineStages = createPipeLineStages(arrayColumnIndexer, lr, assembler)
 

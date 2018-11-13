@@ -7,8 +7,9 @@ import collection.mutable._
 import scala.collection.JavaConversions._
 import org.apache.spark.ml.classification.{BinaryLogisticRegressionSummary, LogisticRegression, LogisticRegressionModel, _}
 import org.apache.spark.mllib.util.MLUtils
+
 /**
-  * Created by Clicky-Blinders.
+  * By order of the Clicky-Blinders
   */
 object SparkAPI extends App {
 
@@ -37,7 +38,7 @@ object SparkAPI extends App {
     data.filter(data.col("type").isNull).select("type").show(1)
      data.filter(data.col("user").isNull).select("user").show(1)*/
 
-    data.select("impid", "timestamp").show(70)
+    //data.select("impid", "timestamp").show(70)
     var training_data_cleaned = DataCleaner.clean(data, spark)
     training_data_cleaned = training_data_cleaned.cache()
      print("\033[H\033[2J") // delete everything on the screen
@@ -89,7 +90,8 @@ object SparkAPI extends App {
     println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")*/
 
     //training_data_cleaned.write.format("json").save("public/datacleaned.json")
-    DataAnalysis.logisticRegression(training_data_cleaned.select("size", "label", "os"), spark)
+    DataAnalysis.logisticRegression(training_data_cleaned, spark)
+    println( (new LogisticRegression()).explainParams)
     spark.stop()
 
 

@@ -49,8 +49,10 @@ object DataCleaner {
 
    println(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
 
-  println(s"\n\t\t\t${Console.BLUE}${Console.BOLD}Drop non relevant columns${Console.RESET}")
-  //newDF = DataFrameFunctions.dropNonRelevantColumns(newDF)
+  print("-\tDrop non relevant columns : ")
+  newDF = DataFrameFunctions.dropNonRelevantColumns(newDF, 15)
+
+  println(s"\n\t\t\t${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
 
 
   cleanNullValue(newDF)

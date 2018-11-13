@@ -8,7 +8,7 @@ import analysis._
 class DataFrameFunctionsTest extends FunSuite {
     
     
-    test ("getPercentageNullValue is set corectly") {
+    test ("getPercentageNullValue is set correctly") {
         Logger.getLogger("org").setLevel(Level.ERROR)
 
         val spark = SparkSession.builder().config("spark.master","local").getOrCreate()
@@ -51,5 +51,23 @@ class DataFrameFunctionsTest extends FunSuite {
 
 
         assert(DataFrameFunctions.dropNonRelevantColumns(someDF).columns.length == 2)
+    }
+
+    test("RandomSplit is set correctly") {
+        Logger.getLogger("org").setLevel(Level.ERROR)
+
+        val spark = SparkSession.builder().config("spark.master","local").getOrCreate()
+
+        import spark.implicits._
+
+        val someDF = Seq(
+            (1),(1), (0), (1), (0),
+            (0), (1), (1), (0), (0),
+            (1),(1), (0), (1), (0),
+            (0), (1), (1), (0), (0)
+        ).toDF("label")
+
+        val Array(train, test) = DataFrameFunctions.randomSplit(someDF, seed = 12345)
+        assert(train.count >= test.count)
     }
 }
