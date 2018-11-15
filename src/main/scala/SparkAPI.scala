@@ -60,7 +60,7 @@ object SparkAPI extends App {
 
       println(s"${Console.BOLD}Predict on my dataset${Console.RESET}\n- First load your dataset")
       println("- Then the model will predict")
-      /*try {*/
+      try {
 
           print(s"-\t${Console.UNDERLINED}Load the model:${Console.RESET} ")
           val model = PipelineModel.read.load("public/model_trained") // load the model
@@ -81,9 +81,9 @@ object SparkAPI extends App {
 
         
 
-     /*} catch {
+     } catch {
         case _ : Throwable => println(s"${Console.BOLD}${Console.RED}Error unable to load these file maybe try to train the model before${Console.RESET}")
-      } */
+      } 
     
 
       case _ => println(s"${Console.BOLD}${Console.RED}Wrong option please restart the program and choose between option 1 or 2${Console.RESET}\n")
