@@ -182,7 +182,7 @@ object DataAnalysis {
         }
 
         val colums = colIndexersToListNames(colIndexers, 0).toArray
-        new VectorAssembler().setInputCols(colums).setOutputCol("features_temp")
+        new VectorAssembler().setInputCols(colums).setOutputCol("features")
     }
 
     /**
@@ -202,8 +202,8 @@ object DataAnalysis {
                 else array(index).createIndex.get :: colIndexerToListStringIndexers(array, index + 1)
             }
         }
-        val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
-        val l = lrModel:: normalizer ::assembler :: colIndexerToListStringIndexers(colIndexers, 0)
+        //val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
+        val l = lrModel:: assembler :: colIndexerToListStringIndexers(colIndexers, 0)
         l.reverse.toArray // reverse the list because assembler cannot before the StringIndexer
     }
 

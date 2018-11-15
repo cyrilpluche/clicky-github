@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.StringIndexerModel","timestamp":1542310188772,"sparkVersion":"2.3.2","uid":"strIdx_48c12692b2ea","paramMap":{"handleInvalid":"keep","stringOrderType":"frequencyDesc","outputCol":"cityindex","inputCol":"city"}}
