@@ -22,8 +22,7 @@ object DataAnalysis {
     */
     def logisticRegression (data: DataFrame, spark: SparkSession): Any /*LogisticRegressionModel*/ = { // TODO
 
-        val Array(training, test) = DataFrameFunctions.randomSplit(data)
-        //data.randomSplit(Array(0.7, 0.3), seed=1L)
+        val Array(training, test) = DataFrameFunctions.randomSplit(data, Array(0.8, 0.2)) //data.randomSplit(Array(0.7, 0.3), seed=1L)
         val df_train = training.cache()
         // val model = train(training)
          println(s"\t\t\t${Console.RED}${Console.BOLD}Start data analysis${Console.RESET}")
@@ -173,7 +172,7 @@ object DataAnalysis {
         }
 
         val colums = colIndexersToListNames(colIndexers, 0).toArray
-        new VectorAssembler().setInputCols(colums).setOutputCol("features_temp")
+        new VectorAssembler().setInputCols(colums).setOutputCol("features")
     }
 
     /**
@@ -193,25 +192,26 @@ object DataAnalysis {
                 else array(index).createIndex.get :: colIndexerToListStringIndexers(array, index + 1)
             }
         }
-        val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
-        val l = lrModel:: normalizer ::assembler :: colIndexerToListStringIndexers(colIndexers, 0)
+        //val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
+        val l = lrModel:: /*normalizer ::*/assembler :: colIndexerToListStringIndexers(colIndexers, 0)
         l.reverse.toArray // reverse the list because assembler cannot before the StringIndexer
     }
 
     /**
     * @param training_dataset: DataFrame the model will train on
     * Starting from a dataframe train and create a PipeLineModel 
-    * the DataFrame is supposed to be provided for training so it was spplitted before
+    * the DataFrame is supposed to be provided for training so it was split before
     */
     def createPipeLineModel (training_dataset: DataFrame): PipelineModel = {
         val arrayColumnIndexer = getArrayColumnIndexer(training_dataset)
         val assembler = createVecteurAssembler(arrayColumnIndexer)
 
         val lr = new LogisticRegression()//.setFitIntercept(true)
-            //.setStandardization(true).setRegParam(0.01)
-            //.setElasticNetParam(0.8).setTol(0.1)
-            .setRegParam(0.01).setTol(0.1)
-            .setMaxIter(25).setLabelCol("label").setFeaturesCol("features")
+            //.setStandardization(true).setRegParam(0.1)
+            //.setElasticNetParam(0.6)//.setTol(0.01)
+            //.setRegParam(0.01)
+            .setMaxIter(1000).setThreshold(0.3)
+            .setRegParam(0.2)
 
         val pipelineStages = createPipeLineStages(arrayColumnIndexer, lr, assembler)
 

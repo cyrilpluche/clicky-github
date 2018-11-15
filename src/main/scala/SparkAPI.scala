@@ -90,8 +90,10 @@ object SparkAPI extends App {
     println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")*/
 
     //training_data_cleaned.write.format("json").save("public/datacleaned.json")
-    DataAnalysis.logisticRegression(training_data_cleaned, spark)
+    DataAnalysis.logisticRegression(training_data_cleaned.select("label", "size", "bidfloor", "appOrSite"), spark)
     println( (new LogisticRegression()).explainParams)
+
+    println(s"\n\n\n\t\t${Console.BOLD}${Console.UNDERLINED}${Console.RED}By order of the Clicky Blinder${Console.RESET}")
     spark.stop()
 
 
