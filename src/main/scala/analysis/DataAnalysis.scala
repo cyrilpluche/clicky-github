@@ -20,7 +20,7 @@ object DataAnalysis {
     * perfoms a logisiticRegression
     * @param data: traning data set
     */
-    def logisticRegression (data: DataFrame, spark: SparkSession): Any /*LogisticRegressionModel*/ = { // TODO
+    def trainLogisticRegression (data: DataFrame, spark: SparkSession): PipelineModel /*LogisticRegressionModel*/ = { // TODO
 
         val Array(training, test) =data.randomSplit(Array(0.8, 0.2), seed=1L)
         /* DataFrameFunctions.randomSplit(data, Array(0.8, 0.2)) */ 
@@ -59,6 +59,17 @@ object DataAnalysis {
         println(s"\n\n\t\t\t${Console.BOLD}${Console.GREEN}ROC${Console.RESET}")
         print("area under ROC = ")
         println(metrics.areaUnderROC())
+
+        model
+    }
+
+    /**
+    * Carry out a prediction over a dataframe 
+    * @param data: The dataframe the prediction will be carried out 
+    * @param model: The pipeline trained model 
+     */
+    def predict (data: DataFrame, model: PipelineModel, spark: SparkSession): DataFrame = {
+        data
     }
 
     private def testModel (label_colname: String, prediction_colname: String, 
@@ -208,7 +219,7 @@ object DataAnalysis {
         val lr = new LogisticRegression()//.setFitIntercept(true)
             //.setStandardization(true).setRegParam(0.1)
             //.setElasticNetParam(0.6)//
-            .setTol(0.1)
+            .setTol(0.01)
             //.setRegParam(0.01)
             .setMaxIter(10)
             //.setThreshold(0.3)
