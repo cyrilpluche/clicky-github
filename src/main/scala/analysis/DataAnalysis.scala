@@ -27,6 +27,8 @@ object DataAnalysis {
         // val model = train(training)
          println(s"\t\t\t${Console.RED}${Console.BOLD}Start data analysis${Console.RESET}")
         val model = createPipeLineModel(df_train)
+        val lrm:LogisticRegressionModel=model.stages.last.asInstanceOf[LogisticRegressionModel]
+        println(lrm.coefficients)
         println(s"\n\n\t\t${Console.BLUE}${Console.BOLD}Machine learning finished ${Console.RESET}")
         val df_test = test.cache()
         val result =  model.transform(df_test)
