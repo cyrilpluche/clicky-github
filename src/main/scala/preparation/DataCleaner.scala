@@ -72,19 +72,6 @@ object DataCleaner {
       ).otherwise(col("network"))
     )
 
-    /*for (row <- list) {
-      print(row.code)
-      dframe = dframe.withColumn(
-            "network",
-            when(
-              col("network") === row.code,
-              row.getBrandOrOperator
-            ).otherwise(col("network"))
-        )
-        print("End\n")
-    }
-    println("End")
-    return dframe */
     def cleanNetworkInt (netWorkCol: Column, netRows: List[NetworkRow]): Column = {
       if (netRows.isEmpty) netWorkCol//dataF
       else {
@@ -156,15 +143,6 @@ object DataCleaner {
     // fill empty values with average of the bidfloor column
     val averageDF = df.select(mean(df("bidfloor"))).first()(0).asInstanceOf[Double]
       // get the average value 
-
-    /*val d = mean(df.col("bidfloor")).getItem(0)
-        df.withColumn("bidfloor", 
-      when(
-        col("bidfloor").isNull or col("bidfloor").isNaN, 
-        averageDF
-      ).otherwise(col("bidfloor")) 
-
-    ) */
       df.na.fill(averageDF, Seq("bidfloor"))
 
   }
@@ -292,10 +270,7 @@ object DataCleaner {
         col("type").isNotNull and
         (col("type") === 1 or col("type") === 2 or col("type") === 3 or col("type") === 4),
         col("type").cast("Double")
-      ).otherwise(-1).cast("Double") /* .cast("Double")
-      cast the column into double type because the model definition only supports 
-      double type 
-      */
+      ).otherwise(-1).cast("Double") 
     ).na.fill(-1, Seq("type"))
   }
 
@@ -324,8 +299,5 @@ object DataCleaner {
   private def cleanNullValue (df: DataFrame): DataFrame = {
       df.na.fill(NO_VALUE)
   }
-
-
-  
  
 }

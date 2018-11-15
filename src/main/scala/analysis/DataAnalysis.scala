@@ -22,9 +22,10 @@ object DataAnalysis {
     */
     def logisticRegression (data: DataFrame, spark: SparkSession): Any /*LogisticRegressionModel*/ = { // TODO
 
-        val Array(training, test) = DataFrameFunctions.randomSplit(data, Array(0.8, 0.2)) //data.randomSplit(Array(0.7, 0.3), seed=1L)
+        val Array(training, test) =data.randomSplit(Array(0.8, 0.2), seed=1L)
+        /* DataFrameFunctions.randomSplit(data, Array(0.8, 0.2)) */ 
         val df_train = training.cache()
-        // val model = train(training)
+        //val model = train(df_train)
          println(s"\t\t\t${Console.RED}${Console.BOLD}Start data analysis${Console.RESET}")
         val model = createPipeLineModel(df_train)
         val lrm:LogisticRegressionModel=model.stages.last.asInstanceOf[LogisticRegressionModel]
@@ -33,13 +34,8 @@ object DataAnalysis {
         val df_test = test.cache()
         val result =  model.transform(df_test)
 
-        //println("End")
         result.printSchema()
         result.cache()
-        //println(s" ${model.explainParams()}")
-        /*val nbErreur = result.filter(result.col("label") !== result.col("prediction")).count()
-        println("Pourcentage erreur " + nbErreur/ result.count() + " Soit un nombre d'eerreur de " + nbErreur)
-        result.filter(result.col("label") !== result.col("prediction")).select("prediction", "label").show(50, false) */
        
        val metrics = testModel("label", "prediction", result, spark)
 
@@ -110,8 +106,8 @@ object DataAnalysis {
                     .filterNot(_ == "label") // remove label column */
         
         val columns = Array(
-            "appOrSiteIndex", "bidfloor", "cityIndex", "exchangeIndex", "impidIndex", 
-            "interestsIndex", "label", "mediaIndexer", "networkIndex", "osIndex", 
+            "appOrSiteIndex", "bidfloor", "exchangeIndex", 
+            "interestsIndex", "mediaIndexer", "networkIndex", "osIndex", 
             "publisherIndex", "sizeIndex", "timestamp","type", "userIndex")
         val assembler = new VectorAssembler()
             .setInputCols(columns).setOutputCol("features_temp")
@@ -119,11 +115,11 @@ object DataAnalysis {
         val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
 
         val lr = new LogisticRegression().setFitIntercept(true)
-            .setStandardization(true).setRegParam(0.3).setTol(0.1)
-            .setMaxIter(15).setLabelCol("label").setFeaturesCol("features")
+            .setStandardization(true).setRegParam(0.1).setTol(0.1)
+            .setMaxIter(10).setLabelCol("label").setFeaturesCol("features")
 
         val pipeline = new Pipeline().setStages(
-            Array(appOrSiteIndexer, cityIndexer, exchangeIndexer, impidIndexer, interestsIndexer, 
+            Array(appOrSiteIndexer,  exchangeIndexer,  interestsIndexer, 
             mediaIndexer, networkIndexer, osIndexer, publisherIndexer, sizeIndexer, //typeIndexer, 
             userIndexer, assembler, normalizer, lr)
         )
@@ -145,7 +141,7 @@ object DataAnalysis {
 
 
     def getArrayColumnIndexer(df: DataFrame): Array[ColumnIndexer] = {
-        val columnNames = df.dtypes
+        val columnNames = df.dtypes.filter(!_._1.equals("label"))
 
         /**
         * @param colnames: Array of tuples (colname, coltype)
@@ -154,6 +150,7 @@ object DataAnalysis {
         def colnamesToListColumnIndexer (colnames: Array[(String, String)], index: Int): List[ColumnIndexer] = {
             if (colnames.length == index) Nil
             else {
+
                 // Check if the type of the column is String otherwise no need of StringIndexer
                 ColumnIndexer(colnames(index)._1, (colnames(index)._2).equals("StringType")) :: 
                     colnamesToListColumnIndexer(colnames, index + 1)
@@ -174,7 +171,7 @@ object DataAnalysis {
         }
 
         val colums = colIndexersToListNames(colIndexers, 0).toArray
-        new VectorAssembler().setInputCols(colums).setOutputCol("features")
+        new VectorAssembler().setInputCols(colums).setOutputCol("features_temp")
     }
 
     /**
@@ -194,8 +191,8 @@ object DataAnalysis {
                 else array(index).createIndex.get :: colIndexerToListStringIndexers(array, index + 1)
             }
         }
-        //val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
-        val l = lrModel:: /*normalizer ::*/assembler :: colIndexerToListStringIndexers(colIndexers, 0)
+        val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
+        val l = lrModel:: normalizer ::assembler :: colIndexerToListStringIndexers(colIndexers, 0)
         l.reverse.toArray // reverse the list because assembler cannot before the StringIndexer
     }
 
@@ -210,10 +207,12 @@ object DataAnalysis {
 
         val lr = new LogisticRegression()//.setFitIntercept(true)
             //.setStandardization(true).setRegParam(0.1)
-            //.setElasticNetParam(0.6)//.setTol(0.01)
+            //.setElasticNetParam(0.6)//
+            .setTol(0.1)
             //.setRegParam(0.01)
-            .setMaxIter(1000).setThreshold(0.3)
-            .setRegParam(0.2)
+            .setMaxIter(10)
+            //.setThreshold(0.3)
+            //.setRegParam(0.2)
 
         val pipelineStages = createPipeLineStages(arrayColumnIndexer, lr, assembler)
 
