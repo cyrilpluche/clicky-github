@@ -74,7 +74,7 @@ object SparkAPI extends App {
           Timer.getExecutionTime{
               val cleanedDf = DataCleaner.clean(data.limit(1000), spark)
               val result = DataAnalysis.predict(cleanedDf, model, spark)
-              result.write.csv("data_predicted.csv")
+              result.write.format("csv").csv("data_predicted.csv")
               println(s"\n\n\tSaved as ${Console.BLUE}${Console.BOLD}data_predicted.csv${Console.RESET}\n")
           }
           
