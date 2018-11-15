@@ -215,7 +215,11 @@ object DataAnalysis {
 
         val pipelineStages = createPipeLineStages(arrayColumnIndexer, lr, assembler)
 
-         new Pipeline().setStages(pipelineStages).fit(training_dataset)
+         val pip=new Pipeline().setStages(pipelineStages)
+         val lrModel=pip.fit(training_dataset)
+         val lrm:LogisticRegressionModel=lrModel.stages.last.asInstanceOf[LogisticRegressionModel]
+         println(lrm.coefficients)
+         return lrModel
 
         
     }
