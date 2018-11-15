@@ -22,9 +22,6 @@ object DataCleaner {
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tNetwork : ") 
 
    newDF = cleanNetwork(newDF)
-   print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tLabel : ")
-
-   newDF = cleanLabel(newDF)
    print(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}\n-\tOS : ")
 
    newDF = cleanOS(newDF)
@@ -52,7 +49,7 @@ object DataCleaner {
   print("-\tDrop non relevant columns : ")
   //newDF = DataFrameFunctions.dropNonRelevantColumns(newDF, 15)
 
-  println(s"\n\t\t\t${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
+  println(s"\t\t\t${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
 
 
   cleanNullValue(newDF)
@@ -75,14 +72,7 @@ object DataCleaner {
     def cleanNetworkInt (netWorkCol: Column, netRows: List[NetworkRow]): Column = {
       if (netRows.isEmpty) netWorkCol//dataF
       else {
-        /*val d = dataF.withColumn(
-            "network",
-            when(
-              col("network") === netRows.head.code,
-              netRows.head.getBrandOrOperator
-            ).otherwise(col("network"))
-        ) */
-
+      
         val col = regexp_replace(netWorkCol, netRows.head.code, netRows.head.getBrandOrOperator)
         cleanNetworkInt(col, netRows.tail)
       }
@@ -106,7 +96,7 @@ object DataCleaner {
     */
   }
 
-  private def cleanLabel (df: DataFrame): DataFrame = {
+   def cleanLabel (df: DataFrame): DataFrame = {
     df.withColumn("label", 
       when(
         col("label") === "true", 
@@ -177,12 +167,7 @@ object DataCleaner {
     def processRegexReplacement (interestColumn: Column, interestRowsList: List[InterestRow]): Column = {
       if (interestRowsList.isEmpty) interestColumn //dataF 
       else {
-        /*val d = dataF.withColumn("interests",
-          when(
-            col("interests").isNotNull,
-            regexp_replace(col("interests"), interestRowsList.head.code, interestRowsList.head.label)
-          ).otherwise(NO_VALUE)
-        )*/
+      
         val col = regexp_replace(interestColumn, interestRowsList.head.code, interestRowsList.head.label)
         processRegexReplacement(col, interestRowsList.tail)
       }

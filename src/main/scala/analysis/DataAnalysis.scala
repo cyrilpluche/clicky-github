@@ -69,7 +69,9 @@ object DataAnalysis {
     * @param model: The pipeline trained model 
      */
     def predict (data: DataFrame, model: PipelineModel, spark: SparkSession): DataFrame = {
-        data
+        val predictDf = model.transform(data)
+        predictDf.cache()
+    
     }
 
     private def testModel (label_colname: String, prediction_colname: String, 
@@ -81,75 +83,7 @@ object DataAnalysis {
         new BinaryClassificationMetrics(predictionAndLabelRDD, 10)
     }
 
-    /**
-    * Prepare data for a regression by changing String columon to StringIndex column then train
-    * @param training_dataset: the dataFrame that will be prepared 
-    * @return PipelineModel
-    */
-    private def train (training_dataset: DataFrame): PipelineModel = { // not used anymore
-
-        val appOrSiteIndexer = new StringIndexer().setInputCol("appOrSite")
-            .setOutputCol("appOrSiteIndex")//.setHandleInvalid("keep")
-        val cityIndexer = new StringIndexer().setInputCol("city")
-            .setOutputCol("cityIndex").setHandleInvalid("keep")
-        val exchangeIndexer = new StringIndexer().setInputCol("exchange")
-            .setOutputCol("exchangeIndex").setHandleInvalid("keep")
-        val impidIndexer = new StringIndexer().setInputCol("impid")
-            .setOutputCol("impidIndex").setHandleInvalid("keep")
-        val interestsIndexer = new StringIndexer().setInputCol("interests")
-            .setOutputCol("interestsIndex").setHandleInvalid("keep")
-        val mediaIndexer = new StringIndexer().setInputCol("media")
-            .setOutputCol("mediaIndexer").setHandleInvalid("keep")
-        val networkIndexer = new StringIndexer().setInputCol("network")
-            .setOutputCol("networkIndex").setHandleInvalid("keep")
-        val osIndexer = new StringIndexer().setInputCol("os")
-            .setOutputCol("osIndex").setHandleInvalid("keep")
-        val publisherIndexer = new StringIndexer().setInputCol("publisher")
-            .setOutputCol("publisherIndex").setHandleInvalid("keep")
-        val sizeIndexer = new StringIndexer().setInputCol("size")
-            .setOutputCol("sizeIndex").setHandleInvalid("keep")
-        //val typeIndexer = new StringIndexer().setInputCol("type")
-            //.setOutputCol("typeIndex").setHandleInvalid("keep")
-        val userIndexer = new StringIndexer().setInputCol("user")
-            .setOutputCol("userIndex").setHandleInvalid("keep")
-
-        /*var columns = data.columns // every column of dataFrame
-                    .filterNot(_ == "label") // remove label column */
-        
-        val columns = Array(
-            "appOrSiteIndex", "bidfloor", "exchangeIndex", 
-            "interestsIndex", "mediaIndexer", "networkIndex", "osIndex", 
-            "publisherIndex", "sizeIndex", "timestamp","type", "userIndex")
-        val assembler = new VectorAssembler()
-            .setInputCols(columns).setOutputCol("features_temp")
-
-        val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
-
-        val lr = new LogisticRegression().setFitIntercept(true)
-            .setStandardization(true).setRegParam(0.1).setTol(0.1)
-            .setMaxIter(10).setLabelCol("label").setFeaturesCol("features")
-
-        val pipeline = new Pipeline().setStages(
-            Array(appOrSiteIndexer,  exchangeIndexer,  interestsIndexer, 
-            mediaIndexer, networkIndexer, osIndexer, publisherIndexer, sizeIndexer, //typeIndexer, 
-            userIndexer, assembler, normalizer, lr)
-        )
-
-       
-
-        println(s"\t\t\t${Console.RED}${Console.BOLD}Start data analysis${Console.RESET}")
-        print(s"-\ttraining: ")
-        
-        val model = pipeline.fit(training_dataset)
-        print(s"\t\t${Console.BLUE}${Console.BOLD}Machine learning finished ${Console.RESET}")
-
-        model
-        
-        //println(s" ${model.explainParams()}")
-        
-        
-    }
-
+   
 
     def getArrayColumnIndexer(df: DataFrame): Array[ColumnIndexer] = {
         val columnNames = df.dtypes.filter(!_._1.equals("label"))

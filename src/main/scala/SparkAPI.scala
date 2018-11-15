@@ -22,7 +22,8 @@ object SparkAPI extends App {
     import spark.implicits._
 
     print("\033[H\033[2J") // delete everything on the screen
-    println("Welcome to the click prediction algorithm.\nWhat do you want to do ?")
+    println(s"\t\t${Console.BOLD}${Console.MAGENTA}Welcome to the click prediction algorithm.${Console.RESET}")
+    println("What do you want to do ?")
     println("1-\t Train a model (machine learning that will result on a model)")
     println("2-\t Predict on my dataset (provide your own dataset)\n")
     println("Please chose between these two options")
@@ -38,30 +39,51 @@ object SparkAPI extends App {
         println(s"${Console.BOLD}Train a model${Console.RESET}\n")
           //val data = spark.read.json("public/data-students.json")
         val data = spark.read.format("json").load("public/data-students.json")
-        data.printSchema()
-        
+              
         var training_data_cleaned = DataCleaner.clean(data, spark)
+        training_data_cleaned = DataCleaner.cleanLabel(training_data_cleaned)
+         data.printSchema()
         training_data_cleaned = training_data_cleaned.cache()
+        
         print("\033[H\033[2J") // delete everything on the screen
         println(s"\t\t\t${Console.YELLOW}${Console.BOLD}Cleanning data is finished ${Console.RESET}")
         training_data_cleaned.printSchema
         // city, interest, impid, timestamp, user
 
-        //training_data_cleaned.write.format("json").save("public/datacleaned.json")
+    
         val pModel = DataAnalysis.trainLogisticRegression(training_data_cleaned, spark)
          pModel.write.overwrite().save("public/model_trained")
+
+         println(s"\t\t${Console.BOLD}${Console.BLUE}Model saved${Console.RESET}")
 
       case 2 => 
 
       println(s"${Console.BOLD}Predict on my dataset${Console.RESET}\n- First load your dataset")
       println("- Then the model will predict")
-      try {
+      /*try {*/
+
+          print(s"-\t${Console.UNDERLINED}Load the model:${Console.RESET} ")
           val model = PipelineModel.read.load("public/model_trained") // load the model
-          val filename = scala.io.StdIn.readLine("Path to your file in json format\n")
-          val data = spark.read.format("json").load("public/data-students.json")
-      } catch {
+          println(s"${Console.BOLD}${Console.BLUE}Finished ${Console.RESET}")
+          val filename = scala.io.StdIn.readLine("What is the path to your file (in json format)\n")
+          print(s"-\t${Console.UNDERLINED}Load the dataframe at the destination $filename ${Console.RESET}: ")
+          val data = spark.read.format("json").load(filename)
+          println(s"${Console.BOLD}${Console.BLUE}Finished ${Console.RESET}")
+
+          println(s"\n\t${Console.YELLOW}${Console.BOLD}Start predicting over 1000 rows${Console.RESET}")
+          Timer.getExecutionTime{
+              val cleanedDf = DataCleaner.clean(data.limit(1000), spark)
+              val result = DataAnalysis.predict(cleanedDf, model, spark)
+              result.withColumnRenamed("prediction", "label").write.csv("data_predicted.csv")
+              println(s"\n\n\tSaved as ${Console.BLUE}${Console.BOLD}data_predicted.csv${Console.RESET}\n")
+          }
+          
+
+        
+
+     /*} catch {
         case _ : Throwable => println(s"${Console.BOLD}${Console.RED}Error unable to load these file maybe try to train the model before${Console.RESET}")
-      }
+      } */
     
 
       case _ => println(s"${Console.BOLD}${Console.RED}Wrong option please restart the program and choose between option 1 or 2${Console.RESET}\n")
