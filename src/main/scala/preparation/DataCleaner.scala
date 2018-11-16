@@ -46,7 +46,7 @@ object DataCleaner {
 
    println(s"${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
 
-  print("-\tDrop non relevant columns : ")
+  //print("-\tDrop non relevant columns : ")
   //newDF = DataFrameFunctions.dropNonRelevantColumns(newDF, 15)
 
   println(s"\t\t\t${Console.BLUE}${Console.BOLD}Finished${Console.RESET}")
@@ -205,47 +205,7 @@ object DataCleaner {
     
 
     d.withColumn("interests", column)
-    /*val d = df.withColumn("interests",
-      when(
-        col("interests").isNull, NO_VALUE
-      ).otherwise(col("interests"))
-    )
-    .withColumn("interests",
-      when(
-        col("interests").notEqual(NO_VALUE),
-        processReplacement(df, col("interests"), listRowFromCSV)
-      ).otherwise(col("interests"))
-    )
 
-    d.select("interests").show()
-    d
-    val dataframe = df.withColumn("interests",
-      when(
-        col("interests").isNotNull, col("interests")
-      ).otherwise(NO_VALUE)
-    ) */
-
-  
-     /*var d = df.select("interests").map(row => { 
-      // map on the column interests the column will be named value
-      if (row.anyNull) NO_VALUE
-      else {
-        row.getString(0).split(",").map(value => { // replace the value by the value of the list
-          replaceValue(value, listRowFromCSV)
-        }).mkString(",") // join all the cell of the array together separated by a ','
-      }
-    }).asInstanceOf[DataFrame]
-    
-    d = d.withColumnRenamed("value", "interests")
-    d.select("interests").show()
-  
-    d.cache()
-  
-    //dataframe.cache()
-    df.select("*").withColumn("interest", 
-      d.col("interests")
-    ).toDF()
-    // replace the column by the new computed column */
     
   }
 

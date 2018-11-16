@@ -71,15 +71,16 @@ object SparkAPI extends App {
           println(s"${Console.BOLD}${Console.BLUE}Finished ${Console.RESET}")
 
           println(s"\n\t${Console.YELLOW}${Console.BOLD}Start predicting over 1000 rows${Console.RESET}")
-          Timer.getExecutionTime{
-              val cleanedDf = DataCleaner.clean(data.limit(1000), spark)
+          Timer.getExecutionTime{ 
+               val cleanedDf = DataCleaner.clean(data.limit(1000), spark)
               val result = DataAnalysis.predict(cleanedDf, model, spark)
-              result.write.format("csv").save("public/data_predicted.csv")
+              result.write.csv("public/data_predicted.csv")
               println(s"\n\n\tSaved as ${Console.BLUE}${Console.BOLD}data_predicted.csv${Console.RESET}\n")
           }
+         
            
 
-     } catch {
+    } catch {
         case _ : Throwable => println(s"${Console.BOLD}${Console.RED}Error unable to load these file maybe try to train the model before${Console.RESET}")
       } 
     
@@ -87,7 +88,7 @@ object SparkAPI extends App {
       case _ => println(s"${Console.BOLD}${Console.RED}Wrong option please restart the program and choose between option 1 or 2${Console.RESET}\n")
     }
 
-    println(s"\n\n\n\t\t${Console.BOLD}${Console.UNDERLINED}${Console.RED}By order of the Clicky Blinder${Console.RESET}")
+    println(s"\n\n\n\t\t${Console.BOLD}${Console.UNDERLINED}${Console.RED}Program comes to its end by order of the Clicky Blinder${Console.RESET}")
     spark.stop()
 
 

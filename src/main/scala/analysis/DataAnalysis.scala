@@ -6,6 +6,7 @@ import org.apache.log4j._
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.ml.feature.{VectorAssembler, StringIndexer, VectorIndexer, OneHotEncoder, _}
+import org.apache.spark.sql.types.{StringType}
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.ml._
@@ -69,9 +70,44 @@ object DataAnalysis {
     * @param model: The pipeline trained model 
      */
     def predict (data: DataFrame, model: PipelineModel, spark: SparkSession): DataFrame = {
-        val predictDf = model.transform(data)
-        predictDf.cache()
-    
+        model.transform(data)
+        .cache()
+        .select("appOrSite", "bidfloor", "city", "exchange", "impid","interests",
+        "media","network",  "os", "prediction",  "publisher", "size", 
+        "timestamp",  "type", "user")
+
+        .withColumn("appOrSite", col("appOrSite").cast("String"))
+
+        .withColumn("bidfloor", col("bidfloor").cast("String"))
+
+        .withColumn("city", col("city").cast("String"))
+
+        .withColumn("exchange", col("exchange").cast("String"))
+
+        .withColumn("impid", col("impid").cast("String"))
+
+        .withColumn("interests", col("interests").cast("String"))
+
+        .withColumn("media", col("media").cast("String"))
+
+        .withColumn("network", col("network").cast("String"))
+
+        .withColumn("os", col("os").cast("String"))
+
+        .withColumn("label", col("prediction").cast("String"))
+
+        .withColumn("publisher", col("publisher").cast("String"))
+      
+        .withColumn("size", col("size").cast("String"))
+
+        .withColumn("timestamp", col("timestamp").cast("String"))
+
+        .withColumn("type", col("type").cast("String"))
+
+         .withColumn("user", col("user").cast("String")).drop("prediction")
+       
+        
+          // prepare for the csv creation
     }
 
     private def testModel (label_colname: String, prediction_colname: String, 
