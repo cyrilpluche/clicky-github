@@ -38,7 +38,7 @@ object DataAnalysis {
         result.printSchema()
         result.cache()
        
-       val metrics = computeMetrics("label", "prediction", result, spark)
+       val metrics = computeMetrics("prediction", "label", result, spark)
 
 
         println(s"\t\t\t${Console.BOLD}${Console.GREEN}Precision ${Console.RESET}")
@@ -82,13 +82,13 @@ object DataAnalysis {
           // prepare for the csv creation
     }
 
-    private def computeMetrics (label_colname: String, prediction_colname: String, 
+    private def computeMetrics (prediction_colname: String, label_colname: String,
         testDF: DataFrame, spark: SparkSession): BinaryClassificationMetrics = {
         import spark.implicits._
         val predictionAndLabelRDD = testDF.select(prediction_colname, label_colname)
             .map(row => (row.getDouble(0), row.getDouble(1))).rdd
 
-        new BinaryClassificationMetrics(predictionAndLabelRDD, 10)
+        new BinaryClassificationMetrics(predictionAndLabelRDD)
     }
 
    
