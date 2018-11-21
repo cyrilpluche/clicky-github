@@ -38,7 +38,7 @@ object DataAnalysis {
         result.printSchema()
         result.cache()
        
-       val metrics = testModel("label", "prediction", result, spark)
+       val metrics = computeMetrics("label", "prediction", result, spark)
 
 
         println(s"\t\t\t${Console.BOLD}${Console.GREEN}Precision ${Console.RESET}")
@@ -53,7 +53,7 @@ object DataAnalysis {
 
 
         println(s"\n\n\t\t\t${Console.BOLD}${Console.GREEN}F-measure${Console.RESET}")
-        metrics.fMeasureByThreshold.foreach { case (t, f) =>
+        metrics.fMeasureByThreshold(0.5).foreach { case (t, f) =>
             println(s"Threshold: $t, F-score: $f, Beta = 1")
         }
     
@@ -70,47 +70,19 @@ object DataAnalysis {
     * @param model: The pipeline trained model 
      */
     def predict (data: DataFrame, model: PipelineModel, spark: SparkSession): DataFrame = {
-        model.transform(data)
+        val e = model.transform(data)
         .cache()
         .select("appOrSite", "bidfloor", "city", "exchange", "impid","interests",
         "media","network",  "os", "prediction",  "publisher", "size", 
         "timestamp",  "type", "user")
-
-        .withColumn("appOrSite", col("appOrSite").cast("String"))
-
-        .withColumn("bidfloor", col("bidfloor").cast("String"))
-
-        .withColumn("city", col("city").cast("String"))
-
-        .withColumn("exchange", col("exchange").cast("String"))
-
-        .withColumn("impid", col("impid").cast("String"))
-
-        .withColumn("interests", col("interests").cast("String"))
-
-        .withColumn("media", col("media").cast("String"))
-
-        .withColumn("network", col("network").cast("String"))
-
-        .withColumn("os", col("os").cast("String"))
-
-        .withColumn("label", col("prediction").cast("String"))
-
-        .withColumn("publisher", col("publisher").cast("String"))
-      
-        .withColumn("size", col("size").cast("String"))
-
-        .withColumn("timestamp", col("timestamp").cast("String"))
-
-        .withColumn("type", col("type").cast("String"))
-
+        DataFrameFunctions.prepareCSV(e)
          .withColumn("user", col("user").cast("String")).drop("prediction")
        
         
           // prepare for the csv creation
     }
 
-    private def testModel (label_colname: String, prediction_colname: String, 
+    private def computeMetrics (label_colname: String, prediction_colname: String, 
         testDF: DataFrame, spark: SparkSession): BinaryClassificationMetrics = {
         import spark.implicits._
         val predictionAndLabelRDD = testDF.select(prediction_colname, label_colname)
@@ -152,7 +124,7 @@ object DataAnalysis {
         }
 
         val colums = colIndexersToListNames(colIndexers, 0).toArray
-        new VectorAssembler().setInputCols(colums).setOutputCol("features")
+        new VectorAssembler().setInputCols(colums).setOutputCol("features_temp")
     }
 
     /**
@@ -173,7 +145,10 @@ object DataAnalysis {
             }
         }
         //val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
-        val l = lrModel:: assembler :: colIndexerToListStringIndexers(colIndexers, 0)
+        val stdScaler = new StandardScaler().setInputCol("features_temp")
+        .setWithStd(false).setWithMean(false)
+        .setOutputCol("features")
+        val l = lrModel:: stdScaler :: assembler :: colIndexerToListStringIndexers(colIndexers, 0)
         l.reverse.toArray // reverse the list because assembler cannot before the StringIndexer
     }
 
@@ -189,11 +164,12 @@ object DataAnalysis {
         val lr = new LogisticRegression()//.setFitIntercept(true)
             //.setStandardization(true).setRegParam(0.1)
             //.setElasticNetParam(0.6)//
-            .setTol(0.01)
+            //.setTol(0.01)
+            .setThreshold(0.3)
             //.setRegParam(0.01)
             .setMaxIter(10)
             //.setThreshold(0.3)
-            //.setRegParam(0.2)
+            .setRegParam(0.3)
 
         val pipelineStages = createPipeLineStages(arrayColumnIndexer, lr, assembler)
 

@@ -55,4 +55,16 @@ object DataFrameFunctions {
     val Array(trainN, testN) = negativeValueDf.randomSplit(weights, seed)
     Array (trainP.unionByName(trainN), testP.unionByName(testN))
   }
+
+  def prepareCSV(df: DataFrame): DataFrame = {
+    def prepareCsvFromArray (d: DataFrame, columns: Array[String], index: Int): DataFrame = {
+      if (columns.length == index) d
+      else {
+        val newDF = d.withColumn(columns(index), col(columns(index)).cast("String"))
+        prepareCsvFromArray(newDF, columns, index + 1)
+      }
+    }
+
+    prepareCsvFromArray(df, df.columns, 0)
+  }
 }

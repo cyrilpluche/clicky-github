@@ -62,11 +62,11 @@ object SparkAPI extends App {
       println("- Then the model will predict")
       try {
 
-          print(s"-\t${Console.UNDERLINED}Load the model:${Console.RESET} ")
+          print(s"-\t${Console.UNDERLINED}Loading the model:${Console.RESET} ")
           val model = PipelineModel.read.load("public/model_trained") // load the model
           println(s"${Console.BOLD}${Console.BLUE}Finished ${Console.RESET}")
           val filename = scala.io.StdIn.readLine("What is the path to your file (in json format)\n")
-          print(s"-\t${Console.UNDERLINED}Load the dataframe at the destination $filename ${Console.RESET}: ")
+          print(s"-\t${Console.UNDERLINED}Loading the dataframe at the destination $filename ${Console.RESET}: ")
           val data = spark.read.format("json").load(filename)
           println(s"${Console.BOLD}${Console.BLUE}Finished ${Console.RESET}")
 
@@ -74,7 +74,7 @@ object SparkAPI extends App {
           Timer.getExecutionTime{ 
                val cleanedDf = DataCleaner.clean(data.limit(1000), spark)
               val result = DataAnalysis.predict(cleanedDf, model, spark)
-              result.write.csv("public/data_predicted.csv")
+              result.write.mode("overwrite").csv("public/data_predicted.csv")
               println(s"\n\n\tSaved as ${Console.BLUE}${Console.BOLD}data_predicted.csv${Console.RESET}\n")
           }
          
@@ -82,7 +82,7 @@ object SparkAPI extends App {
 
     } catch {
         case _ : Throwable => println(s"${Console.BOLD}${Console.RED}Error unable to load these file maybe try to train the model before${Console.RESET}")
-      } 
+      }
     
 
       case _ => println(s"${Console.BOLD}${Console.RED}Wrong option please restart the program and choose between option 1 or 2${Console.RESET}\n")
