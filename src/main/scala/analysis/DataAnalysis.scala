@@ -87,8 +87,8 @@ object DataAnalysis {
     private def testModel (label_colname: String, prediction_colname: String, 
         testDF: DataFrame, spark: SparkSession): BinaryClassificationMetrics = {
         import spark.implicits._
-        val predictionAndLabelRDD = testDF.select(prediction_colname, label_colname)
-            .map(row => (row.getDouble(0), row.getDouble(1))).rdd
+        val predictionAndLabelRDD = testDF.select("rawPrediction", "label")
+            .map(row => (row.r.getAs[DenseVector](0)(1), row.getDouble(1))).rdd
 
         new BinaryClassificationMetrics(predictionAndLabelRDD, 10)
     }
