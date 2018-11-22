@@ -16,6 +16,7 @@ import org.apache.spark.ml.util._
 object DataAnalysis {
 
     //https://vishnuviswanath.com/spark_lr.html
+    //http://blog.madhukaraphatak.com/class-imbalance-part-3/
     
     /**
     * perfoms a logisiticRegression
@@ -38,7 +39,7 @@ object DataAnalysis {
         result.printSchema()
         result.cache()
        
-       val metrics = computeMetrics("prediction", "label", result, spark)
+       val metrics = testModel("label", "prediction", result, spark)
 
 
         println(s"\t\t\t${Console.BOLD}${Console.GREEN}Precision ${Console.RESET}")
@@ -53,7 +54,7 @@ object DataAnalysis {
 
 
         println(s"\n\n\t\t\t${Console.BOLD}${Console.GREEN}F-measure${Console.RESET}")
-        metrics.fMeasureByThreshold(0.5).foreach { case (t, f) =>
+        metrics.fMeasureByThreshold.foreach { case (t, f) =>
             println(s"Threshold: $t, F-score: $f, Beta = 1")
         }
     
@@ -75,6 +76,7 @@ object DataAnalysis {
         .select("appOrSite", "bidfloor", "city", "exchange", "impid","interests",
         "media","network",  "os", "prediction",  "publisher", "size", 
         "timestamp",  "type", "user")
+
         DataFrameFunctions.prepareCSV(e)
          .withColumn("user", col("user").cast("String")).drop("prediction")
        
@@ -82,13 +84,13 @@ object DataAnalysis {
           // prepare for the csv creation
     }
 
-    private def computeMetrics (prediction_colname: String, label_colname: String,
+    private def testModel (label_colname: String, prediction_colname: String, 
         testDF: DataFrame, spark: SparkSession): BinaryClassificationMetrics = {
         import spark.implicits._
         val predictionAndLabelRDD = testDF.select(prediction_colname, label_colname)
             .map(row => (row.getDouble(0), row.getDouble(1))).rdd
 
-        new BinaryClassificationMetrics(predictionAndLabelRDD)
+        new BinaryClassificationMetrics(predictionAndLabelRDD, 10)
     }
 
    
@@ -145,10 +147,10 @@ object DataAnalysis {
             }
         }
         //val normalizer = new Normalizer().setInputCol("features_temp").setOutputCol("features")
-        val stdScaler = new StandardScaler().setInputCol("features_temp")
-        .setWithStd(false).setWithMean(false)
-        .setOutputCol("features")
-        val l = lrModel:: stdScaler :: assembler :: colIndexerToListStringIndexers(colIndexers, 0)
+        val standardScaler = new StandardScaler().setInputCol("features_temp").setOutputCol("standard_features")
+        val cols = assembler.getInputCols ++ Array(standardScaler.getOutpuCol)
+        val finalVA = new VectorAssembler().setInputCols(cols).setOutputCol("features")
+        val l = lrModel:: finalVA :: standardScaler :: assembler :: colIndexerToListStringIndexers(colIndexers, 0)
         l.reverse.toArray // reverse the list because assembler cannot before the StringIndexer
     }
 
@@ -164,12 +166,11 @@ object DataAnalysis {
         val lr = new LogisticRegression()//.setFitIntercept(true)
             //.setStandardization(true).setRegParam(0.1)
             //.setElasticNetParam(0.6)//
-            //.setTol(0.01)
-            .setThreshold(0.3)
+            .setTol(0.01)
             //.setRegParam(0.01)
             .setMaxIter(10)
             //.setThreshold(0.3)
-            .setRegParam(0.3)
+            //.setRegParam(0.2)
 
         val pipelineStages = createPipeLineStages(arrayColumnIndexer, lr, assembler)
 
