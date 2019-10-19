@@ -67,7 +67,7 @@ object DataAnalysis {
 
     /**
     * Carry out a prediction over a dataframe 
-    * @param data: The dataframe the prediction will be carried out 
+    * @param data: The dataframe on which the prediction will be carried out 
     * @param model: The pipeline trained model 
      */
     def predict (data: DataFrame, model: PipelineModel, spark: SparkSession): DataFrame = {
